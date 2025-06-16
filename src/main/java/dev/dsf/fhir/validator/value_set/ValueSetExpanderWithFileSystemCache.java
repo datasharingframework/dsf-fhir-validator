@@ -32,8 +32,6 @@ public class ValueSetExpanderWithFileSystemCache
 	 *
 	 * @param cacheFolder
 	 *            not <code>null</code>
-	 * @param resourceType
-	 *            not <code>null</code>
 	 * @param fhirContext
 	 *            not <code>null</code>
 	 * @param delegate
@@ -87,8 +85,6 @@ public class ValueSetExpanderWithFileSystemCache
 
 		try
 		{
-			// ValueSetExpansionOutcome read = readFromCache(valueSet.getUrl(), valueSet.getVersion(), ValueSet.class,
-			// ValueSetExpansionOutcome::new);
 			ValueSetExpansionOutcome read = readResourceFromCache(valueSet.getUrl(), valueSet.getVersion(),
 					ValueSetExpansionOutcome::new);
 
@@ -114,8 +110,6 @@ public class ValueSetExpanderWithFileSystemCache
 			return expanded;
 		}
 		else
-			// return writeToCache(expanded, ValueSetExpansionOutcome::getValueset, ValueSet::getUrl,
-			// ValueSet::getVersion);
 			return writeRsourceToCache(expanded, ValueSetExpansionOutcome::getValueset, ValueSet::getUrl,
 					ValueSet::getVersion);
 	}
