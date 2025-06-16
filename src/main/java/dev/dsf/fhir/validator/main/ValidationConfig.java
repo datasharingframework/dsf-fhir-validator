@@ -489,8 +489,11 @@ public class ValidationConfig
 	{
 		if (validationPackages == null || validationPackages.isEmpty()
 				|| validationPackages.stream().filter(Predicate.not(String::isBlank)).count() == 0)
+		{
 			logger.warn(
 					"Validation packages not specified, define at least one package via config parameter 'dev.dsf.validation.package' in the form 'name|version[, name|version]'");
+			return List.of();
+		}
 
 		return validationPackages.stream().filter(Predicate.not(String::isBlank))
 				.map(ValidationPackageIdentifier::fromString).toList();
