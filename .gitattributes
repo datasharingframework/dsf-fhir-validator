@@ -6,6 +6,8 @@
 *.java text
 *.xml text
 *.bpmn text
+*.json text
+*.md text
 
 # Declare files that will always have certain line endings on checkout.
 *.bat text eol=crlf
