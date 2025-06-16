@@ -93,7 +93,7 @@ public class ValidationPackageClientJersey implements ValidationPackageClient
 
 	@Override
 	public ValidationPackage download(ValidationPackageIdentifier identifier)
-			throws IOException, WebApplicationException
+			throws WebApplicationException, IOException
 	{
 		Objects.requireNonNull(identifier, "identifier");
 
@@ -102,5 +102,13 @@ public class ValidationPackageClientJersey implements ValidationPackageClient
 		{
 			return ValidationPackage.from(identifier.getName(), identifier.getVersion(), in);
 		}
+	}
+
+	@Override
+	public PackageVersions list(String name) throws WebApplicationException
+	{
+		Objects.requireNonNull(name, "name");
+
+		return getResource().path(name).request("application/json").get(PackageVersions.class);
 	}
 }
