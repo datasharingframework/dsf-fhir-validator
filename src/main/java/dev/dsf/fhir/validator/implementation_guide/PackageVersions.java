@@ -82,12 +82,18 @@ public record PackageVersions(@JsonProperty("_id") String id, @JsonProperty("nam
 				.filter(e -> e.getKey() != null && e.getKey().matches(versionPrefix + "\\d+")).map(Entry::getKey)
 				.sorted(Comparator.comparingInt((String v) ->
 				{
-					Pattern p = Pattern.compile(versionPrefix + "(\\d+)");
-					Matcher matcher = p.matcher(v);
-					if (matcher.matches())
-						return Integer.parseInt(matcher.group(1));
-					else
-						return -1;
+					try
+					{
+						Pattern p = Pattern.compile(versionPrefix + "(\\d+)");
+						Matcher matcher = p.matcher(v);
+						if (matcher.matches())
+							return Integer.parseInt(matcher.group(1));
+					}
+					catch (NumberFormatException e)
+					{
+					}
+
+					return -1;
 				}).reversed()).findFirst();
 	}
 }
