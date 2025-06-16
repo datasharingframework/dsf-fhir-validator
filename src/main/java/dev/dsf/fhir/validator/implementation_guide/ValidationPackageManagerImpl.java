@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,17 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 
 	private ValidationPackage downloadAndHandleException(ValidationPackageIdentifier identifier)
 	{
+		if (identifier.getVersion().matches("\\d+\\.\\d+\\.x"))
+		{
+			String versoinPrefix = identifier.getVersion().substring(0, identifier.getVersion().length() - 1);
+
+			PackageVersions versions = validationPackageClient.list(identifier.getName());
+			Optional<String> latest = versions.getLatest(versoinPrefix);
+
+			if (latest.isPresent())
+				identifier = new ValidationPackageIdentifier(identifier.getName(), latest.get());
+		}
+
 		try
 		{
 			logger.debug("Downloading validation package {}", identifier);

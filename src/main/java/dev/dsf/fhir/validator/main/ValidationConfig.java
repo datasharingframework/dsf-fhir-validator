@@ -75,7 +75,7 @@ public class ValidationConfig
 	@Value("${dev.dsf.validation:true}")
 	private boolean validationEnabled;
 
-	@Value("#{'${dev.dsf.validation.package:de.medizininformatikinitiative.kerndatensatz.laborbefund|2025.0.2}'.trim().split('(,[ ]?)|(\\n)')}")
+	@Value("#{'${dev.dsf.validation.package:}'.trim().split('(,[ ]?)|(\\n)')}")
 	private List<String> validationPackages;
 
 	@Value("#{'${dev.dsf.validation.package.noDownload:}'.trim().split('(,[ ]?)|(\\n)')}")
@@ -154,7 +154,6 @@ public class ValidationConfig
 
 	@Value("#{'${dev.dsf.validation.structuredefinition.modifierClasses:"
 			+ "dev.dsf.fhir.validator.structure_definition.ClosedTypeSlicingRemover,"
-			+ "dev.dsf.fhir.validator.structure_definition.IdentifierRemover,"
 			+ "dev.dsf.fhir.validator.structure_definition.SliceMinFixer" + "}'.trim().split('(,[ ]?)|(\\n)')}")
 	private List<String> structureDefinitionModifierClasses;
 
@@ -488,9 +487,15 @@ public class ValidationConfig
 	@Bean
 	public List<ValidationPackageIdentifier> validationPackageIdentifiers()
 	{
-		if (validationPackages == null || validationPackages.isEmpty())
-			throw new IllegalArgumentException("Validation packages not specified");
+		if (validationPackages == null || validationPackages.isEmpty()
+				|| validationPackages.stream().filter(Predicate.not(String::isBlank)).count() == 0)
+		{
+			logger.warn(
+					"Validation packages not specified, define at least one package via config parameter 'dev.dsf.validation.package' in the form 'name|version[, name|version]'");
+			return List.of();
+		}
 
-		return validationPackages.stream().map(ValidationPackageIdentifier::fromString).toList();
+		return validationPackages.stream().filter(Predicate.not(String::isBlank))
+				.map(ValidationPackageIdentifier::fromString).toList();
 	}
 }
