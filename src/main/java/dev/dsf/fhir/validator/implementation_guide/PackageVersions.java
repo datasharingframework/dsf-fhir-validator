@@ -1,6 +1,11 @@
 package dev.dsf.fhir.validator.implementation_guide;
 
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -66,5 +71,23 @@ public record PackageVersions(@JsonProperty("_id") String id, @JsonProperty("nam
 		this.description = description;
 		this.distTags = distTags;
 		this.versions = versions;
+	}
+
+	public Optional<String> getLatest(String versionPrefix)
+	{
+		if (!versionPrefix.matches("\\d+\\.\\d+\\."))
+			throw new IllegalArgumentException("versionPrefix must match \\d+\\.\\d+\\.");
+
+		return versions.entrySet().stream()
+				.filter(e -> e.getKey() != null && e.getKey().matches(versionPrefix + "\\d+")).map(Entry::getKey)
+				.sorted(Comparator.comparingInt((String v) ->
+				{
+					Pattern p = Pattern.compile(versionPrefix + "(\\d+)");
+					Matcher matcher = p.matcher(v);
+					if (matcher.matches())
+						return Integer.parseInt(matcher.group(1));
+					else
+						return -1;
+				}).reversed()).findFirst();
 	}
 }
