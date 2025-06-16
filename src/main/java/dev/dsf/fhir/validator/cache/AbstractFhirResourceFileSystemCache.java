@@ -81,7 +81,7 @@ public abstract class AbstractFhirResourceFileSystemCache<T, R extends Resource>
 		}
 	}
 
-	protected T writeRsourceToCache(T value, Function<T, R> toResource, Function<R, String> toUrl,
+	protected T writeResourceToCache(T value, Function<T, R> toResource, Function<R, String> toUrl,
 			Function<R, String> toVersion)
 	{
 		try

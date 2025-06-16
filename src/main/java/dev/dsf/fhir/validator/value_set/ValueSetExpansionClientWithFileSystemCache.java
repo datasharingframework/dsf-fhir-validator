@@ -104,7 +104,7 @@ public class ValueSetExpansionClientWithFileSystemCache extends AbstractFhirReso
 			return expanded;
 		}
 		else
-			return writeRsourceToCache(expanded, Function.identity(), ValueSet::getUrl, ValueSet::getVersion);
+			return writeResourceToCache(expanded, Function.identity(), ValueSet::getUrl, ValueSet::getVersion);
 	}
 
 	@Override

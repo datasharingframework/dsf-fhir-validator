@@ -110,7 +110,7 @@ public class ValueSetExpanderWithFileSystemCache
 			return expanded;
 		}
 		else
-			return writeRsourceToCache(expanded, ValueSetExpansionOutcome::getValueset, ValueSet::getUrl,
+			return writeResourceToCache(expanded, ValueSetExpansionOutcome::getValueset, ValueSet::getUrl,
 					ValueSet::getVersion);
 	}
 }

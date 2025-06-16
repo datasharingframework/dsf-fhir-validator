@@ -123,7 +123,7 @@ public class SnapshotGeneratorWithFileSystemCache
 			return snapshot;
 		}
 		else
-			return writeRsourceToCache(snapshot, SnapshotWithValidationMessages::getSnapshot,
+			return writeResourceToCache(snapshot, SnapshotWithValidationMessages::getSnapshot,
 					StructureDefinition::getUrl, StructureDefinition::getVersion);
 	}
 

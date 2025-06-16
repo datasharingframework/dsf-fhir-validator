@@ -78,7 +78,6 @@ public class ValidationConfig
 	@Value("#{'${dev.dsf.validation.package:de.medizininformatikinitiative.kerndatensatz.laborbefund|2025.0.2}'.trim().split('(,[ ]?)|(\\n)')}")
 	private List<String> validationPackages;
 
-	// @Value("#{'${dev.dsf.validation.package.noDownload:hl7.fhir.r4.core|4.0.1}'.trim().split('(,[ ]?)|(\\n)')}")
 	@Value("#{'${dev.dsf.validation.package.noDownload:}'.trim().split('(,[ ]?)|(\\n)')}")
 	private List<String> noDownloadPackages;
 
