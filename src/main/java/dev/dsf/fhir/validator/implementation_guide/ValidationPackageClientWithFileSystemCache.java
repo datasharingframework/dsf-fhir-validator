@@ -76,4 +76,12 @@ public class ValidationPackageClientWithFileSystemCache extends AbstractFileSyst
 			return writeToCache(delegate.download(identifier), p -> p.getIdentifier().toString(),
 					p -> "validation package", mapper::writeValue);
 	}
+
+	@Override
+	public PackageVersions list(String name) throws WebApplicationException
+	{
+		Objects.requireNonNull(name, "name");
+
+		return delegate.list(name);
+	}
 }

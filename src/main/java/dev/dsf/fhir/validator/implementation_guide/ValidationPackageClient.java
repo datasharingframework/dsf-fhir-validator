@@ -28,4 +28,12 @@ public interface ValidationPackageClient
 	 * @throws WebApplicationException
 	 */
 	ValidationPackage download(ValidationPackageIdentifier identifier) throws IOException, WebApplicationException;
+
+	/**
+	 * @param name
+	 *            not <code>null</code>
+	 * @return package versions
+	 * @throws WebApplicationException
+	 */
+	PackageVersions list(String name) throws WebApplicationException;
 }
