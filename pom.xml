@@ -28,7 +28,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/datasharingframework/dsf-fhir-validator.git</connection>
 		<developerConnection>scm:git:git@github.com:datasharingframework/dsf-fhir-validator.git</developerConnection>
-		<url>https://github.com/datasharingframework/dsf-fhir-validato</url>
+		<url>https://github.com/datasharingframework/dsf-fhir-validator</url>
 	</scm>
 
 	<licenses>
@@ -43,7 +43,7 @@
 		<snapshotRepository>
 			<id>github</id>
 			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/datasharingframework/dsf</url>
+			<url>https://maven.pkg.github.com/datasharingframework/dsf-fhir-validator</url>
 		</snapshotRepository>
 	</distributionManagement>
 
