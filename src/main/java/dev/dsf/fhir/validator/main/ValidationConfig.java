@@ -56,6 +56,7 @@ import dev.dsf.fhir.validator.value_set.ValueSetExpander;
 import dev.dsf.fhir.validator.value_set.ValueSetExpanderImpl;
 import dev.dsf.fhir.validator.value_set.ValueSetExpanderWithFileSystemCache;
 import dev.dsf.fhir.validator.value_set.ValueSetExpanderWithModifiers;
+import dev.dsf.fhir.validator.value_set.ValueSetExpansionClientStarVersion;
 import dev.dsf.fhir.validator.value_set.ValueSetExpansionClientWithFileSystemCache;
 import dev.dsf.fhir.validator.value_set.ValueSetExpansionClientWithModifiers;
 import dev.dsf.fhir.validator.value_set.ValueSetModifier;
@@ -400,7 +401,8 @@ public class ValidationConfig
 	public TerminologyServerClient terminologyServerClient()
 	{
 		return new ValueSetExpansionClientWithFileSystemCache(valueSetCacheFolder(), fhirContext(),
-				new ValueSetExpansionClientWithModifiers(terminologyServerClientJersey(), valueSetModifiers()),
+				new ValueSetExpansionClientWithModifiers(
+						new ValueSetExpansionClientStarVersion(terminologyServerClientJersey()), valueSetModifiers()),
 				valueSetCacheDraftResources);
 	}
 

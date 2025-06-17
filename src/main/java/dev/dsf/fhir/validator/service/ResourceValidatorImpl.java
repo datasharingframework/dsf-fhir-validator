@@ -61,6 +61,8 @@ public class ResourceValidatorImpl implements ResourceValidator
 			else if (url != null && url.startsWith("urn:uuid:") && url.length() == 45
 					&& ("uri".equals(type) || "url".equals(type)) && !canonical)
 				return true;
+			else if (url != null && url.startsWith("urn:oid:") && "uri".equals(type) && !canonical)
+				return true;
 			else if (url != null && (url.startsWith("http://") || url.startsWith("https://"))
 					&& ("uri".equals(type) || "canonical".equals(type)))
 				return true;
