@@ -26,7 +26,10 @@ public interface ValidationPackageManager
 	 * @param identifier
 	 * @return validation package with dependencies
 	 */
-	ValidationPackageWithDepedencies downloadPackageWithDependencies(ValidationPackageIdentifier identifier);
+	default ValidationPackageWithDepedencies downloadPackageWithDependencies(ValidationPackageIdentifier identifier)
+	{
+		return downloadPackagesWithDependencies(identifier).get(0);
+	}
 
 	/**
 	 * Downloads the given FHIR packages and all its dependencies.

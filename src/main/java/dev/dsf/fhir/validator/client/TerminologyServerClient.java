@@ -1,8 +1,10 @@
 package dev.dsf.fhir.validator.client;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.CodeSystem;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.ValueSet;
@@ -13,6 +15,14 @@ public interface TerminologyServerClient
 {
 	record ValidationResult(boolean result, String message, OperationOutcome outome)
 	{
+	}
+
+	record UrlAndVersion(String url, String version)
+	{
+		public static UrlAndVersion fromCodeSystem(CodeSystem cs)
+		{
+			return new UrlAndVersion(cs.getUrl(), cs.getVersion());
+		}
 	}
 
 	/**
@@ -55,4 +65,12 @@ public interface TerminologyServerClient
 
 		return validate(new Coding(system, code, display).setVersion(version));
 	}
+
+	/**
+	 * @param url
+	 *            not <code>null</code>
+	 * @return
+	 * @throws WebApplicationException
+	 */
+	List<UrlAndVersion> getSupportedCodeSystemVersion(String url) throws WebApplicationException;
 }

@@ -343,7 +343,7 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 				new NonValidatingValidationSupport(context, "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
 						"http://fhir.de/CodeSystem/dimdi/icd-10-gm", "http://fhir.de/CodeSystem/bfarm/ops",
 						"http://fhir.de/CodeSystem/dimdi/ops", "http://fhir.de/CodeSystem/ifa/pzn",
-						"http://snomed.info/sct", "http://loinc.org"));
+						"http://snomed.info/sct", "http://loinc.org", "http://varnomen.hgvs.org"));
 	}
 
 	private <V> List<V> getAll(Function<ValidationPackageWithDepedencies, List<V>> mapper,

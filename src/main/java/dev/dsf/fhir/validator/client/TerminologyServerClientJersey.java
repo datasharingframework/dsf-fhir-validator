@@ -1,6 +1,7 @@
 package dev.dsf.fhir.validator.client;
 
 import java.security.KeyStore;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -15,7 +16,10 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonP
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.CodeSystem;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
@@ -142,5 +146,17 @@ public class TerminologyServerClientJersey implements TerminologyServerClient
 	public CapabilityStatement getMetadata() throws WebApplicationException
 	{
 		return getResource().path("metadata").request(Constants.CT_FHIR_JSON_NEW).get(CapabilityStatement.class);
+	}
+
+	@Override
+	public List<UrlAndVersion> getSupportedCodeSystemVersion(String url) throws WebApplicationException
+	{
+		Bundle resultBundle = getResource().path("CodeSystem").queryParam("url", url).queryParam("_summary", "true")
+				.request(Constants.CT_FHIR_JSON_NEW).get(Bundle.class);
+
+		return resultBundle.getEntry().stream().filter(BundleEntryComponent::hasResource)
+				.map(BundleEntryComponent::getResource).filter(r -> r instanceof CodeSystem).map(r -> (CodeSystem) r)
+				.filter(cs -> cs.hasVersionElement() && cs.getVersionElement().hasValue())
+				.map(UrlAndVersion::fromCodeSystem).distinct().toList();
 	}
 }

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,23 +73,13 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 			packages.add(ValidationPackageWithDepedencies.from(packagesByNameAndVersion, identifier));
 		}
 
-		logger.info("Using packages {} for validation",
-				packages.stream().flatMap(p -> Stream.concat(Stream.of(p), p.getDependencies().stream()))
-						.map(ValidationPackage::getIdentifier).map(ValidationPackageIdentifier::toString).sorted()
-						.collect(Collectors.joining(", ", "[", "]")));
+		logger.info("Validating with packages {}",
+				packages.stream().map(p -> p.getIdentifier().toString() + " {dependencies: "
+						+ p.getDependencies().stream().map(ValidationPackage::getIdentifier)
+								.map(ValidationPackageIdentifier::toString).sorted().collect(Collectors.joining(", "))
+						+ "}").collect(Collectors.joining(", ", "[", "]")));
 
 		return packages;
-	}
-
-	@Override
-	public ValidationPackageWithDepedencies downloadPackageWithDependencies(ValidationPackageIdentifier identifier)
-	{
-		Objects.requireNonNull(identifier, "identifier");
-
-		Map<ValidationPackageIdentifier, ValidationPackage> packagesByNameAndVersion = new HashMap<>();
-		downloadPackageWithDependencies(identifier, packagesByNameAndVersion, new HashMap<>());
-
-		return ValidationPackageWithDepedencies.from(packagesByNameAndVersion, identifier);
 	}
 
 	private void downloadPackageWithDependencies(ValidationPackageIdentifier identifier,
@@ -99,6 +88,9 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 	{
 		if (allPackagesByNameAndVersion.containsKey(identifier))
 		{
+			ValidationPackage dependency = allPackagesByNameAndVersion.get(identifier);
+			packagesByNameAndVersion.put(identifier, dependency);
+
 			// already downloaded
 			return;
 		}
@@ -114,6 +106,9 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 		// check again, as the identifier may have changed from a A.B.x wildcard
 		if (allPackagesByNameAndVersion.containsKey(identifier))
 		{
+			ValidationPackage dependency = allPackagesByNameAndVersion.get(identifier);
+			packagesByNameAndVersion.put(identifier, dependency);
+
 			// already downloaded
 			return;
 		}
