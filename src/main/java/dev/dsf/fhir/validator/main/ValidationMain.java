@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -142,17 +143,27 @@ public class ValidationMain implements InitializingBean
 		{
 			logger.info("Validating {} from {}", r.getResource().getResourceType().name(), r.getFilename());
 
-			if (r.getResource() instanceof Bundle)
+			if (r.getResource() instanceof Bundle b)
 			{
-				Bundle validationResult = validator.validate((Bundle) r.getResource());
+				Bundle validationResult = logExecutionTimeInMs(() -> validator.validate(b), "Bundle");
 				System.out.println(getOutputParser().encodeResourceToString(validationResult));
 			}
 			else
 			{
-				ValidationResult validationResult = validator.validate(r.getResource());
+				ValidationResult validationResult = logExecutionTimeInMs(() -> validator.validate(r.getResource()),
+						r.getResource().getResourceType().name());
 				System.out.println(getOutputParser().encodeResourceToString(validationResult.toOperationOutcome()));
 			}
 		});
+	}
+
+	private <T> T logExecutionTimeInMs(Supplier<T> supplier, String resourceType)
+	{
+		long t0 = System.currentTimeMillis();
+		T t = supplier.get();
+		long t1 = System.currentTimeMillis();
+		logger.debug("{} validated in {} ms", resourceType, t1 - t0);
+		return t;
 	}
 
 	private IParser getOutputParser()
