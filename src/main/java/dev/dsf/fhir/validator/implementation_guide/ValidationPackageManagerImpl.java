@@ -82,17 +82,6 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 		return packages;
 	}
 
-	@Override
-	public ValidationPackageWithDepedencies downloadPackageWithDependencies(ValidationPackageIdentifier identifier)
-	{
-		Objects.requireNonNull(identifier, "identifier");
-
-		Map<ValidationPackageIdentifier, ValidationPackage> packagesByNameAndVersion = new HashMap<>();
-		downloadPackageWithDependencies(identifier, packagesByNameAndVersion, new HashMap<>());
-
-		return ValidationPackageWithDepedencies.from(packagesByNameAndVersion, identifier);
-	}
-
 	private void downloadPackageWithDependencies(ValidationPackageIdentifier identifier,
 			Map<ValidationPackageIdentifier, ValidationPackage> packagesByNameAndVersion,
 			Map<ValidationPackageIdentifier, ValidationPackage> allPackagesByNameAndVersion)
