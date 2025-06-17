@@ -29,6 +29,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.context.support.IValidationSupport;
 import dev.dsf.fhir.validator.client.TerminologyServerClient;
+import dev.dsf.fhir.validator.implementation_guide.ValidationPackageIdentifier;
 import dev.dsf.fhir.validator.implementation_guide.ValidationPackageWithDepedencies;
 import dev.dsf.fhir.validator.structure_definition.SnapshotGenerator;
 import dev.dsf.fhir.validator.structure_definition.SnapshotGenerator.SnapshotWithValidationMessages;
@@ -154,7 +155,8 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 
 		packageWithDependencies.getValueSetsIncludingDependencies(valueSetBindingStrengths, fhirContext).forEach(v ->
 		{
-			logger.debug("Expanding ValueSet {}|{}", v.getUrl(), v.getVersion());
+			logger.debug("Expanding ValueSet {}|{} from package (incl. dependencies) {}", v.getUrl(), v.getVersion(),
+					packageWithDependencies.getIdentifier().toString());
 
 			// ValueSet uses filter or import in compose
 			if (v.hasCompose() && ((v.getCompose().hasInclude()
@@ -162,19 +164,20 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 					|| (v.getCompose().hasExclude()
 							&& v.getCompose().getExclude().stream().anyMatch(c -> c.hasFilter() || c.hasValueSet()))))
 			{
-				expandExternal(expandedValueSets, v);
+				expandExternal(expandedValueSets, v, packageWithDependencies.getIdentifier());
 			}
 			else
 			{
 				// will try external expansion if internal not successful
-				expandInternal(expandedValueSets, expander, v);
+				expandInternal(expandedValueSets, expander, v, packageWithDependencies.getIdentifier());
 			}
 		});
 
 		return expandedValueSets;
 	}
 
-	private void expandExternal(List<ValueSet> expandedValueSets, ValueSet v)
+	private void expandExternal(List<ValueSet> expandedValueSets, ValueSet v,
+			ValidationPackageIdentifier validationPackageIdentifier)
 	{
 		try
 		{
@@ -184,8 +187,9 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 		catch (WebApplicationException e)
 		{
 			logger.warn(
-					"Error while expanding ValueSet {}|{} externally, this may result in incomplete validation: {} - {}",
-					v.getUrl(), v.getVersion(), e.getClass().getName(), e.getMessage());
+					"Unable to expand ValueSet {}|{} from package (incl. dependencies) {} externally, this may result in incomplete validation: {} - {}",
+					v.getUrl(), v.getVersion(), validationPackageIdentifier.toString(), e.getClass().getName(),
+					e.getMessage());
 			getOutcome(e).ifPresent(m -> logger.debug("Expansion error response: {}", m));
 			logger.debug("ValueSet with error while expanding: {}",
 					fhirContext.newJsonParser().encodeResourceToString(v));
@@ -193,32 +197,35 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 		catch (Exception e)
 		{
 			logger.warn(
-					"Error while expanding ValueSet {}|{} externally, this may result in incomplete validation: {} - {}",
-					v.getUrl(), v.getVersion(), e.getClass().getName(), e.getMessage());
+					"Unable to expand ValueSet {}|{} from package (incl. dependencies) {} externally, this may result in incomplete validation: {} - {}",
+					v.getUrl(), v.getVersion(), validationPackageIdentifier.toString(), e.getClass().getName(),
+					e.getMessage());
 			logger.debug("ValueSet with error while expanding: {}",
 					fhirContext.newJsonParser().encodeResourceToString(v));
 		}
 	}
 
-	private void expandInternal(List<ValueSet> expandedValueSets, ValueSetExpander expander, ValueSet v)
+	private void expandInternal(List<ValueSet> expandedValueSets, ValueSetExpander expander, ValueSet v,
+			ValidationPackageIdentifier validationPackageIdentifier)
 	{
 		try
 		{
 			ValueSetExpansionOutcome expansion = expander.expand(v);
 
 			if (expansion.getError() != null)
-				logger.warn("Error while expanding ValueSet {}|{} internally: {}", v.getUrl(), v.getVersion(),
-						expansion.getError());
+				logger.warn("Unable to expand ValueSet {}|{} from package (incl. dependencies) {} internally: {}",
+						v.getUrl(), v.getVersion(), validationPackageIdentifier.toString(), expansion.getError());
 			else
 				expandedValueSets.add(expansion.getValueset());
 		}
 		catch (Exception e)
 		{
 			logger.info(
-					"Error while expanding ValueSet {}|{} internally: {} - {}, trying to expand via external terminology server next",
-					v.getUrl(), v.getVersion(), e.getClass().getName(), e.getMessage());
+					"Unable to expand ValueSet {}|{} from package (incl. dependencies) {} internally: {} - {}, trying to expand via external terminology server next",
+					v.getUrl(), v.getVersion(), validationPackageIdentifier.toString(), e.getClass().getName(),
+					e.getMessage());
 
-			expandExternal(expandedValueSets, v);
+			expandExternal(expandedValueSets, v, validationPackageIdentifier);
 		}
 	}
 
@@ -250,7 +257,7 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 			packageWithDependencies.getValidationSupportResources().getStructureDefinitions().stream()
 					.filter(s -> s.hasDifferential() && !s.hasSnapshot())
 					.forEach(diff -> createSnapshot(packageWithDependencies, snapshotsAndExpandedValueSets, snapshots,
-							generator, diff));
+							generator, diff, packageWithDependencies.getIdentifier()));
 		}
 
 		return supportChain;
@@ -258,7 +265,8 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 
 	private void createSnapshot(ValidationPackageWithDepedencies packageWithDependencies,
 			ValidationSupportWithCustomResources snapshotsAndExpandedValueSets,
-			Map<String, StructureDefinition> snapshots, SnapshotGenerator generator, StructureDefinition diff)
+			Map<String, StructureDefinition> snapshots, SnapshotGenerator generator, StructureDefinition diff,
+			ValidationPackageIdentifier validationPackageIdentifier)
 	{
 		if (snapshots.containsKey(diff.getUrl() + "|" + diff.getVersion()))
 			return;
@@ -267,8 +275,8 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 		definitions.addAll(packageWithDependencies.getStructureDefinitionDependencies(diff));
 		definitions.add(diff);
 
-		logger.debug("Generating snapshot for {}|{}, base {}, dependencies {}", diff.getUrl(), diff.getVersion(),
-				diff.getBaseDefinition(),
+		logger.debug("Generating snapshot for {}|{} from package (incl. dependencies) {}, base {}, dependencies {}",
+				diff.getUrl(), diff.getVersion(), validationPackageIdentifier.toString(), diff.getBaseDefinition(),
 				definitions.stream()
 						.filter(sd -> !sd.equals(diff) && !sd.getUrl().equals(diff.getBaseDefinition())
 								&& !(sd.getUrl() + "|" + sd.getVersion()).equals(diff.getBaseDefinition()))
@@ -284,8 +292,10 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 
 		if (PublicationStatus.ACTIVE.equals(diff.getStatus()) && !dependenciesWithDifferentStatus.isEmpty())
 		{
-			logger.warn("StructureDefinition {}|{}, has dependencies with no active status [{}]", diff.getUrl(),
-					diff.getVersion(), dependenciesWithDifferentStatus);
+			logger.warn(
+					"StructureDefinition {}|{} from package (incl. dependencies) {}, has dependencies with no active status [{}]",
+					diff.getUrl(), diff.getVersion(), validationPackageIdentifier.toString(),
+					dependenciesWithDifferentStatus);
 		}
 
 		definitions.stream().filter(sd -> sd.hasDifferential() && !sd.hasSnapshot()
@@ -293,7 +303,8 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 				{
 					try
 					{
-						logger.debug("Generating snapshot for {}|{}", sd.getUrl(), sd.getVersion());
+						logger.debug("Generating snapshot for {}|{} from package (incl. dependencies) {}", sd.getUrl(),
+								sd.getVersion(), validationPackageIdentifier.toString());
 						SnapshotWithValidationMessages snapshot = generator.generateSnapshot(sd);
 
 						if (snapshot.getSnapshot().hasSnapshot())
@@ -304,8 +315,8 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 						}
 						else
 							logger.error(
-									"Error while generating snapshot for {}|{}: Not snaphsot returned from generator",
-									diff.getUrl(), diff.getVersion());
+									"Error while generating snapshot for {}|{} from package (incl. dependencies) {}: Not snaphsot returned from generator",
+									diff.getUrl(), diff.getVersion(), validationPackageIdentifier.toString());
 
 						snapshot.getMessages().forEach(m ->
 						{
@@ -320,12 +331,15 @@ public class ValidatorFactoryImpl implements ValidatorFactory, InitializingBean
 					}
 					catch (Exception e)
 					{
-						logger.error("Error while generating snapshot for {}|{}: {} - {}", diff.getUrl(),
-								diff.getVersion(), e.getClass().getName(), e.getMessage());
+						logger.error(
+								"Error while generating snapshot for {}|{} from package (incl. dependencies) {}: {} - {}",
+								diff.getUrl(), diff.getVersion(), validationPackageIdentifier.toString(),
+								e.getClass().getName(), e.getMessage());
 					}
 				});
 
-		logger.debug("Generating snapshot for {}|{} [Done]", diff.getUrl(), diff.getVersion());
+		logger.debug("Generating snapshot for {}|{} from package (incl. dependencies) {} [Done]", diff.getUrl(),
+				diff.getVersion(), validationPackageIdentifier.toString());
 	}
 
 	private ValidationSupportChain createSupportChain(FhirContext context,

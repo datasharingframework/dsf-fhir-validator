@@ -138,8 +138,6 @@ public class ValidationMain implements InitializingBean
 
 	public void validate(BundleValidator validator, String[] files)
 	{
-		logger.info("Using validation packages {}", validationPackageIdentifiers);
-
 		Arrays.stream(files).map(this::read).filter(r -> r != null).forEach(r ->
 		{
 			logger.info("Validating {} from {}", r.getResource().getResourceType().name(), r.getFilename());
@@ -188,7 +186,7 @@ public class ValidationMain implements InitializingBean
 		try (InputStream in = Files.newInputStream(Paths.get(file)))
 		{
 			IBaseResource resource = fhirContext.newJsonParser().parseResource(in);
-			logger.info("{} read from {}", resource.getClass().getSimpleName(), file);
+			logger.debug("{} read from {}", resource.getClass().getSimpleName(), file);
 			return new FileNameAndResource(file, (Resource) resource);
 		}
 		catch (Exception e)
@@ -203,7 +201,7 @@ public class ValidationMain implements InitializingBean
 		try (InputStream in = Files.newInputStream(Paths.get(file)))
 		{
 			IBaseResource resource = fhirContext.newXmlParser().parseResource(in);
-			logger.info("{} read from {}", resource.getClass().getSimpleName(), file);
+			logger.debug("{} read from {}", resource.getClass().getSimpleName(), file);
 			return new FileNameAndResource(file, (Resource) resource);
 		}
 		catch (Exception e)
