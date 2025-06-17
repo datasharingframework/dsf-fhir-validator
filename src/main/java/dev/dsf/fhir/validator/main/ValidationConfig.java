@@ -17,10 +17,14 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.hl7.fhir.r4.model.Enumerations.BindingStrength;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,7 +68,7 @@ import jakarta.ws.rs.WebApplicationException;
 
 @Configuration
 @PropertySource(ignoreResourceNotFound = true, value = "file:application.properties")
-public class ValidationConfig
+public class ValidationConfig implements InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(ValidationConfig.class);
 
@@ -73,8 +77,29 @@ public class ValidationConfig
 		OK, NOT_OK, DISABLED
 	}
 
+	public static enum LogLevel
+	{
+		TRACE(Level.TRACE), DEBUG(Level.DEBUG), INFO(Level.INFO), WARN(Level.WARN), ERROR(Level.ERROR), FATAL(
+				Level.FATAL), OFF(Level.OFF);
+
+		private final Level level;
+
+		private LogLevel(Level level)
+		{
+			this.level = level;
+		}
+
+		public Level level()
+		{
+			return level;
+		}
+	}
+
 	@Value("${dev.dsf.validation:true}")
 	private boolean validationEnabled;
+
+	@Value("${dev.dsf.logLevel:INFO}")
+	private LogLevel logLevel;
 
 	@Value("#{'${dev.dsf.validation.package:}'.trim().split('(,[ ]?)|(\\n)')}")
 	private List<String> validationPackages;
@@ -182,6 +207,15 @@ public class ValidationConfig
 	@Value("${dsf.dev.validation.proxy.password:#{null}}")
 	private char[] proxyPassword;
 
+	@Override
+	public void afterPropertiesSet() throws Exception
+	{
+		Configurator.setLevel(LogManager.getLogger("dev.dsf").getName(), logLevel.level());
+
+		if (EnumSet.of(LogLevel.ERROR, LogLevel.WARN, LogLevel.OFF).contains(logLevel))
+			Configurator.setLevel(LogManager.getRootLogger(), logLevel.level());
+	}
+
 	@Bean
 	public ObjectMapper objectMapper()
 	{
@@ -286,6 +320,7 @@ public class ValidationConfig
 			if (cacheFolderPath.startsWith(systemTempFolder))
 			{
 				Files.createDirectories(cacheFolderPath);
+
 				logger.debug("Cache folder for type {} created at {}", cacheFolderType,
 						cacheFolderPath.toAbsolutePath().toString());
 			}
@@ -327,6 +362,7 @@ public class ValidationConfig
 		try
 		{
 			logger.debug("Creating trust-store for {} from {}", trustStoreType, trustCertificatesPath.toString());
+
 			List<X509Certificate> certificates = PemReader.readCertificates(trustCertificatesPath);
 			return KeyStoreCreator.jksForTrustedCertificates(certificates);
 		}
