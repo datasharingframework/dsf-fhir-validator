@@ -98,7 +98,7 @@ public class ValidationConfig implements InitializingBean
 	@Value("${dev.dsf.validation:true}")
 	private boolean validationEnabled;
 
-	@Value("${dev.dsf.logLevel:INFO}")
+	@Value("${dev.dsf.validation.logLevel:INFO}")
 	private LogLevel logLevel;
 
 	@Value("#{'${dev.dsf.validation.package:}'.trim().split('(,[ ]?)|(\\n)')}")
