@@ -97,10 +97,10 @@ public class ValidationPackageClientJersey implements ValidationPackageClient
 	{
 		Objects.requireNonNull(identifier, "identifier");
 
-		try (InputStream in = getResource().path(identifier.getName()).path(identifier.getVersion())
+		try (InputStream in = getResource().path(identifier.name()).path(identifier.version())
 				.request("application/tar+gzip").get(InputStream.class))
 		{
-			return ValidationPackage.from(identifier.getName(), identifier.getVersion(), in);
+			return ValidationPackage.from(identifier.name(), identifier.version(), in);
 		}
 	}
 
