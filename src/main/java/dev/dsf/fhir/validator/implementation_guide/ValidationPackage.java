@@ -151,9 +151,9 @@ public class ValidationPackage
 	{
 		return entry ->
 		{
-			if ("package/package.json".equals(entry.getFileName())
-					|| (entry.getFileName() != null && (entry.getFileName().startsWith("package/example")
-							|| entry.getFileName().endsWith(".index.json") || !entry.getFileName().endsWith(".json"))))
+			if ("package/package.json".equals(entry.getFileName()) || (entry.getFileName() != null
+					&& (entry.getFileName().startsWith("package/example") || entry.getFileName().endsWith(".index.json")
+							|| entry.getFileName().endsWith(".schema.json") || !entry.getFileName().endsWith(".json"))))
 			{
 				logger.debug("Ignoring {}", entry.getFileName());
 				return;
@@ -187,8 +187,8 @@ public class ValidationPackage
 			}
 			catch (Exception e)
 			{
-				logger.warn("Ignoring resource with error while parsing, {}: {}", e.getClass().getName(),
-						e.getMessage());
+				logger.warn("Ignoring resource with error while parsing {}, {}: {}", entry.getFileName(),
+						e.getClass().getName(), e.getMessage());
 			}
 		};
 	}
