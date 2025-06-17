@@ -169,19 +169,19 @@ public class ValidationPackage
 				resourceString = resourceString.replaceAll("<h2>[\\s\\w\\[\\]]*</tt>", "");
 				IBaseResource resource = context.newJsonParser().parseResource(resourceString);
 
-				if (resource instanceof CodeSystem)
-					codeSystems.add((CodeSystem) resource);
-				else if (resource instanceof NamingSystem)
-					namingSystems.add((NamingSystem) resource);
-				else if (resource instanceof StructureDefinition)
+				if (resource instanceof CodeSystem c)
+					codeSystems.add(c);
+				else if (resource instanceof NamingSystem n)
+					namingSystems.add(n);
+				else if (resource instanceof StructureDefinition s)
 				{
-					if (!StructureDefinitionKind.LOGICAL.equals(((StructureDefinition) resource).getKind()))
-						structureDefinitions.add((StructureDefinition) resource);
+					if (!StructureDefinitionKind.LOGICAL.equals(s.getKind()))
+						structureDefinitions.add(s);
 					else
 						logger.debug("Ignoring StructureDefinition with kind = logical");
 				}
-				else if (resource instanceof ValueSet)
-					valueSets.add((ValueSet) resource);
+				else if (resource instanceof ValueSet v)
+					valueSets.add(v);
 				else
 					logger.debug("Ignoring resource of type {}", resource.getClass().getName());
 			}
