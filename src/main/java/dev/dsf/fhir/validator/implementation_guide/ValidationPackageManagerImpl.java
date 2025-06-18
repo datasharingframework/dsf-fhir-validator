@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,18 +73,13 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 			packages.add(ValidationPackageWithDepedencies.from(packagesByNameAndVersion, identifier));
 		}
 
+		logger.info("Validating with packages {}",
+				packages.stream().map(p -> p.getIdentifier().toString() + " {dependencies: "
+						+ p.getDependencies().stream().map(ValidationPackage::getIdentifier)
+								.map(ValidationPackageIdentifier::toString).sorted().collect(Collectors.joining(", "))
+						+ "}").collect(Collectors.joining(", ", "[", "]")));
+
 		return packages;
-	}
-
-	@Override
-	public ValidationPackageWithDepedencies downloadPackageWithDependencies(ValidationPackageIdentifier identifier)
-	{
-		Objects.requireNonNull(identifier, "identifier");
-
-		Map<ValidationPackageIdentifier, ValidationPackage> packagesByNameAndVersion = new HashMap<>();
-		downloadPackageWithDependencies(identifier, packagesByNameAndVersion, new HashMap<>());
-
-		return ValidationPackageWithDepedencies.from(packagesByNameAndVersion, identifier);
 	}
 
 	private void downloadPackageWithDependencies(ValidationPackageIdentifier identifier,
@@ -92,6 +88,9 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 	{
 		if (allPackagesByNameAndVersion.containsKey(identifier))
 		{
+			ValidationPackage dependency = allPackagesByNameAndVersion.get(identifier);
+			packagesByNameAndVersion.put(identifier, dependency);
+
 			// already downloaded
 			return;
 		}
@@ -102,6 +101,23 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 		}
 
 		ValidationPackage vPackage = downloadAndHandleException(identifier);
+		identifier = vPackage.getIdentifier();
+
+		// check again, as the identifier may have changed from a A.B.x wildcard
+		if (allPackagesByNameAndVersion.containsKey(identifier))
+		{
+			ValidationPackage dependency = allPackagesByNameAndVersion.get(identifier);
+			packagesByNameAndVersion.put(identifier, dependency);
+
+			// already downloaded
+			return;
+		}
+		else if (noDownloadPackages.contains(identifier))
+		{
+			logger.debug("Not using package {}", identifier.toString());
+			return;
+		}
+
 		packagesByNameAndVersion.put(identifier, vPackage);
 		allPackagesByNameAndVersion.put(identifier, vPackage);
 
@@ -112,15 +128,15 @@ public class ValidationPackageManagerImpl implements InitializingBean, Validatio
 
 	private ValidationPackage downloadAndHandleException(ValidationPackageIdentifier identifier)
 	{
-		if (identifier.getVersion().matches("\\d+\\.\\d+\\.x"))
+		if (identifier.version().matches("\\d+\\.\\d+\\.x"))
 		{
-			String versoinPrefix = identifier.getVersion().substring(0, identifier.getVersion().length() - 1);
+			String versoinPrefix = identifier.version().substring(0, identifier.version().length() - 1);
 
-			PackageVersions versions = validationPackageClient.list(identifier.getName());
+			PackageVersions versions = validationPackageClient.list(identifier.name());
 			Optional<String> latest = versions.getLatest(versoinPrefix);
 
 			if (latest.isPresent())
-				identifier = new ValidationPackageIdentifier(identifier.getName(), latest.get());
+				identifier = new ValidationPackageIdentifier(identifier.name(), latest.get());
 		}
 
 		try

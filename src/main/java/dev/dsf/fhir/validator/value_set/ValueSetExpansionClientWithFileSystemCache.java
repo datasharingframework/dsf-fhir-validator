@@ -3,6 +3,7 @@ package dev.dsf.fhir.validator.value_set;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -95,6 +96,8 @@ public class ValueSetExpansionClientWithFileSystemCache extends AbstractFhirReso
 
 	private ValueSet expandAndWriteToCache(ValueSet valueSet)
 	{
+		Objects.requireNonNull(valueSet, "valueSet");
+
 		ValueSet expanded = delegate.expand(valueSet);
 
 		if (PublicationStatus.DRAFT.equals(expanded.getStatus()) && !cacheDraftResources)
@@ -116,6 +119,16 @@ public class ValueSetExpansionClientWithFileSystemCache extends AbstractFhirReso
 	@Override
 	public ValidationResult validate(Coding coding) throws WebApplicationException
 	{
+		Objects.requireNonNull(coding, "coding");
+
 		return delegate.validate(coding);
+	}
+
+	@Override
+	public List<UrlAndVersion> getSupportedCodeSystemVersion(String url) throws WebApplicationException
+	{
+		Objects.requireNonNull(url, "url");
+
+		return delegate.getSupportedCodeSystemVersion(url);
 	}
 }

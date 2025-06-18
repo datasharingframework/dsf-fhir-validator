@@ -36,8 +36,7 @@ public class ValueSetExpansionClientWithModifiers implements TerminologyServerCl
 	@Override
 	public ValueSet expand(ValueSet valueSet) throws WebApplicationException
 	{
-		if (valueSet == null)
-			return null;
+		Objects.requireNonNull(valueSet, "valueSet");
 
 		for (ValueSetModifier modifier : valueSetModifiers)
 			valueSet = modifier.modifyPreExpansion(valueSet);
@@ -59,6 +58,16 @@ public class ValueSetExpansionClientWithModifiers implements TerminologyServerCl
 	@Override
 	public ValidationResult validate(Coding coding) throws WebApplicationException
 	{
+		Objects.requireNonNull(coding, "coding");
+
 		return delegate.validate(coding);
+	}
+
+	@Override
+	public List<UrlAndVersion> getSupportedCodeSystemVersion(String url) throws WebApplicationException
+	{
+		Objects.requireNonNull(url, "url");
+
+		return delegate.getSupportedCodeSystemVersion(url);
 	}
 }
